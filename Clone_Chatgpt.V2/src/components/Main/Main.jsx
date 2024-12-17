@@ -1,32 +1,51 @@
 import { useState } from "react";
 import "./Main.css";
+import axios from "axios";
 import { assets } from "../../assets/assets";
 import video from "../../assets/6153453-uhd_4096_2160_25fps.mp4" ;
 
 function Main() {
   const [formView, setFormView] = useState(null);
+  const [username,setUsername]=useState('');
+  const [userIcon,setUserIcon]=useState(assets.user_icon);
 
-  const HandleChange=()=>{
+  function HandleChange() {
     setFormView('register');
   }
   const closeForm=()=>{
     setFormView(null);
   }
-  const handleSubmit=(e)=>{
+  const handleSubmit=async(e)=>{
     e.preventDefault();
+    const formDate = new FormData(e.target);
+    const data=Object.fromEntries(formDate.entries());
+    console.log(data);
+    try{
+      if(formDate === ' register'){
+        const response = await axios.post('http://localhost:5000/register',data);
+        alert(response.data.message);
+    }else if ( formDate === 'signin'){
+      const response = await axios.post('http://localhost:5000/signin',data);
+      alert(response.data.message);
+      setUsername(response.data.user.username);
+      setUserIcon(response.data.user.userIcon);
+    }
+    }catch(error){
+      console.log(error);
+      alert("Error" + error.response.data.message);
+      }
     alert( "Form submitted");
-
   }
   return (
     <div className="main">
       <div className="nav">
         <p>Clone_Chatgpt.V2</p>
-        <img src={assets.user_icon} onClick={HandleChange} alt="" />
+        <img src={userIcon} onClick={HandleChange} alt="" />
       </div>
       <div className="main-container">
         <div className="greet">
           <p>
-            <span>Hello,Uchiha itachi.</span>
+            <span>Hello,{username || "Uchiha itachi"}.</span>
           </p>
           <p>How can I help today</p>
         </div>
@@ -75,6 +94,7 @@ function Main() {
             <button className="close-btn" onClick={closeForm}>
               X
             </button>
+            <form onSubmit={handleSubmit}>
             {formView === "register" && (
               <>
                 <h2>Register</h2>
@@ -113,6 +133,7 @@ function Main() {
                 <button onClick={() => alert("Signed out!")}>Sign Out</button>
               </>
             )}
+            </form>
           </div>
         </div>
       )}
