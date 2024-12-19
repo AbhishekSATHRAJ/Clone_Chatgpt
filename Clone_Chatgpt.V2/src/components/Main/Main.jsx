@@ -1,11 +1,20 @@
-import { useState ,useEffect} from "react";
+import { useState ,useEffect, useContext} from "react";
 import "./Main.css";
 import axios from "axios";
 import { assets } from "../../assets/assets";
 import video from "../../assets/6153453-uhd_4096_2160_25fps.mp4";
+import { Context } from "../../context/Context";
 // import server from "../../server";
 
 function Main() {
+
+  const {onSent, recentPrompt, showResult, loading , resultData , setInput , input }=useContext(Context)
+
+
+
+
+
+
   // Utility function to validate password
   const validatePassword = (password) => {
     if (password.length < 8)
@@ -18,6 +27,8 @@ function Main() {
       return "Password must include at least one number";
     return null;
   };
+
+  
 
   const [formView, setFormView] = useState(null);
   const [username, setUsername] = useState("");
@@ -103,7 +114,8 @@ function Main() {
         />
       </div>
       <div className="main-container">
-        <div className="greet">
+         {!showResult? <>
+          <div className="greet">
           <p>
             <span>Hello,{username || "Uchiha itachi"}.</span>
           </p>
@@ -127,13 +139,34 @@ function Main() {
             <img src={assets.code_icon} alt="" />
           </div>
         </div>
+         </>
+         :<div className="result">
+            <div className="result-title">
+              <img src={assets.user_icon} alt=""/>
+              <p>{recentPrompt}</p>
+            </div>
+            <div className="result-data">
+              <img src={assets.gemini_icon} alt="" />
+              {loading?
+              <div className="loader">
+                  <hr />
+                  <hr />
+                  <hr />
+              </div>: 
+              <p dangerouslySetInnerHTML={{__html:resultData}}></p>
+
+              }
+            </div>
+         </div>
+         }
+        
         <div className="main-bottom">
           <div className="search-box">
-            <input type="text" placeholder="Enter a prompt her..." />
+            <input onChange={(e)=>setInput(e.target.value)}  value={input} type="text" placeholder="Enter a prompt her..." />
             <div>
               <img src={assets.gallery_icon} alt="" />
               <img src={assets.mic_icon} alt="" />
-              <img src={assets.send_icon} alt="" />
+              {input? <img onClick={()=>onSent()} src={assets.send_icon} alt="" />:null}
             </div>
           </div>
           <p className="bottom-info">
