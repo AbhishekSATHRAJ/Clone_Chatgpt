@@ -7,13 +7,17 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import process from 'process';
 
+
 dotenv.config();
 
-const result = dotenv.config();
-if (result.error) {
-  throw result.error;
-}
-console.log('Environment variables loaded:', process.env);
+const requiredEnvVars = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_DATABASE', 'SECRET_KEY'];
+requiredEnvVars.forEach((key) => {
+  if (!process.env[key]) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+});
+
+const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_DATABASE, SECRET_KEY } = process.env;
 
 
 const app = express();
@@ -21,11 +25,13 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:5000',
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST'],
+  credentials: true,
 }));
 app.use(bodyParser.json());
 
-const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_DATABASE, SECRET_KEY } = process.env;
+
 
 // Database connection
 const db = mysql.createConnection({
@@ -41,9 +47,28 @@ db.connect((err) => {
   console.log('MySQL Database connected');
 });
 
+  // Utility function to validate password
+  const validatePassword = (password) => {
+    if (password.length < 8) return 'Password must be at least 8 characters long';
+    if (!/[A-Z]/.test(password)) return 'Password must include at least one uppercase letter';
+    if (!/[a-z]/.test(password)) return 'Password must include at least one lowercase letter';
+    if (!/[0-9]/.test(password)) return 'Password must include at least one number';
+    return null;
+  };
+
+
+
 // REGISTER ROUTE
 app.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'Username, email, and password are required' });
+  }
+
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    return res.status(400).json({ message: passwordError });
+  }
   try {
     const hashedPassword = await bcryptjs.hash(password, 10); 
     const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
@@ -82,9 +107,13 @@ app.post('/signin', async (req, res) => {
 
       const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' });
 
-      // Save token to the database
-      const saveTokenQuery = 'UPDATE users SET token = ? WHERE id = ?';
-      db.query(saveTokenQuery, [token, user.id]);
+      const updateQuery = 'UPDATE users SET token = ? WHERE id = ?';
+      db.query(updateQuery, [token, user.id], (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Error storing token in the database' });
+        }
+      });
+
 
       res.json({ message: 'User signed in successfully', token, user });
     });
@@ -97,6 +126,9 @@ app.post('/signin', async (req, res) => {
 // SIGN-OUT ROUTE
 app.post('/signout', async (req, res) => {
   const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
   try {
     const query = 'UPDATE users SET token = NULL WHERE id = ?';
     db.query(query, [id], (err) => {
@@ -109,12 +141,38 @@ app.post('/signout', async (req, res) => {
   }
 });
 
+// Middleware to verify JWT token from the database
+const verifyTokenFromDB = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) return res.status(403).json({ message: "No token provided" });
+
+  // Extract the token from "Bearer <token>"
+  const tokenWithoutBearer = token.split(" ")[1];
+
+  // Check if the token exists in the database
+  const query = 'SELECT * FROM users WHERE token = ?';
+  db.query(query, [tokenWithoutBearer], (err, result) => {
+    if (err || result.length === 0) {
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+
+    // Token is valid, proceed to the next middleware
+    req.userId = result[0].id;
+    next();
+  });
+};
+
 // ROOT ROUTE
-app.get('/', (req, res) => {
-  res.json({ message: 'Backend is running' });
+app.get('/user', verifyTokenFromDB, (req, res) => {
+  const query = 'SELECT username, userIcon FROM users WHERE id = ?';
+  db.query(query, [req.userId], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Error fetching user data' });
+    if (result.length === 0) return res.status(404).json({ message: 'User not found' });
+    res.json(result[0]);
+  });
 });
 
 // SERVER LISTEN
-app.listen(5000, () => {
-  console.log(`Server is running on port 5000`);
+app.listen(5173, () => {
+  console.log(`Server is running on port 5173`);
 });
