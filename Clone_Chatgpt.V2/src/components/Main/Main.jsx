@@ -41,11 +41,11 @@ function Main() {
   const closeForm = () => {
     setFormView(null);
   };
-  const handleSubmit =  (e) => {
+  const handleSubmit =  async (e) => {
     e.preventDefault();
     const formDate = new FormData(e.target);
     const data = Object.fromEntries(formDate.entries());
-    console.log(data);
+    console.log("Form Data submitted:",data);
   
     if (formView === "register") {
       const passwordError = validatePassword(data.password);
@@ -58,10 +58,18 @@ function Main() {
     try {
       let response;
       if (formView === "register") {
-        response =  axios.post("http://localhost:5000/register", data,{ withCredentials: true });
+        console.log("Sending register request",data);
+        
+        response = await  axios.post("http://localhost:5000/register", data,{ withCredentials: true });
+        console.log("registration response :", response.data);
+        
         alert(response.data.message);
+
       } else if (formView === "signin") {
-        response =  axios.post("http://localhost:5000/signin", data,{ withCredentials: true });
+        console.log("Sending sign-in request :", data);
+        
+        response = await  axios.post("http://localhost:5000/signin", data,{ withCredentials: true });
+        console.log("sign-in response :", response.data);
         
         alert(response.data.message);
   
@@ -75,7 +83,7 @@ function Main() {
         }
       }
     } catch (error) {
-      console.log(error);
+      console.log("Error during request:",error);
       alert("Error: " + error.response.data.message);
     }
   };
@@ -95,7 +103,7 @@ function Main() {
           setUserIcon(response.data.userIcon);
         })
         .catch((error) => {
-          console.log(error);
+          console.log("error fetching user data:",error);
           // Handle cases where token is invalid or expired
           localStorage.removeItem("token");
         });

@@ -24,12 +24,24 @@ const app = express();
 
 
 // Middleware
-app.use(cors({
-  origin: 'http://localhost:5173',
-  methods: ['GET', 'POST'],
-  credentials: true,
-}));
+app.use(cors(
+  { origin: "http://localhost:5173// "}));
+
+
+
 app.use(bodyParser.json());
+
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:5173"); 
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE"); 
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); 
+  res.header("Access-Control-Allow-Credentials", "true"); 
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200); 
+  }
+  next();
+})
 
 
 
@@ -173,6 +185,6 @@ app.get('/user', verifyTokenFromDB, (req, res) => {
 });
 
 // SERVER LISTEN
-app.listen(5173, () => {
-  console.log(`Server is running on port 5173`);
+app.listen(5000, () => {
+  console.log(`Server is running on port 5000`);
 });
