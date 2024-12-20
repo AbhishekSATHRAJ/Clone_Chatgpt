@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import process from 'process';
+import https from 'https';
 
 
 dotenv.config();
@@ -187,6 +188,6 @@ app.get('/user', verifyTokenFromDB, (req, res) => {
 });
 
 // SERVER LISTEN
-app.listen(5000, () => {
+https.createServer(app).listen(5000, () => {
   console.log(`Server is running on port 5000`);
 });
