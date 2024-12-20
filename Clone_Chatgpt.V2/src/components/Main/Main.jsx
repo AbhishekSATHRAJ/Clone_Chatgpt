@@ -65,7 +65,7 @@ function Main() {
       if (formView === "register") {
         console.log("Sending register request",data);
         
-        response = await  axios.post("http://localhost:5000/register", data,{ withCredentials: true });
+        response = await  axios.post("http://localhost:5000/register", JSON.stringify(data), config,{ withCredentials: true });
         console.log("registration response :", response.data);
         
         alert(response.data.message);
@@ -73,7 +73,7 @@ function Main() {
       } else if (formView === "signin") {
         console.log("Sending sign-in request :", data);
         
-        response = await  axios.post("http://localhost:5000/signin", data,{ withCredentials: true });
+        response = await  axios.post("http://localhost:5000/signin", JSON.stringify(data), config,{ withCredentials: true });
         console.log("sign-in response :", response.data);
         
         alert(response.data.message);
