@@ -57,6 +57,11 @@ function Main() {
   
     try {
       let response;
+      const config = {
+      headers: {
+        "Content-Type": "application/json", 
+      },
+    };
       if (formView === "register") {
         console.log("Sending register request",data);
         
@@ -101,6 +106,7 @@ function Main() {
         .then((response) => {
           setUsername(response.data.username);
           setUserIcon(response.data.userIcon);
+          console.log("User data fetched:", response.data);
         })
         .catch((error) => {
           console.log("error fetching user data:",error);
