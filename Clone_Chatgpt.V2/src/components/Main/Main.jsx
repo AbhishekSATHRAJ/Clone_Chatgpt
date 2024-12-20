@@ -66,7 +66,7 @@ function Main() {
       if (formView === "register") {
         console.log("Sending register request",data);
         
-        response = await  axios.post("http://localhost:5000/register", JSON.stringify(data), config,{ withCredentials: true });
+        response = await  axios.post("https://localhost:5000/register", JSON.stringify(data), config,{ withCredentials: true });
         console.log("registration response :", response.data);
         
         alert(response.data.message);
@@ -74,7 +74,7 @@ function Main() {
       } else if (formView === "signin") {
         console.log("Sending sign-in request :", data);
         
-        response = await  axios.post("http://localhost:5000/signin", JSON.stringify(data), config,{ withCredentials: true });
+        response = await  axios.post("https://localhost:5000/signin", JSON.stringify(data), config,{ withCredentials: true });
         console.log("sign-in response :", response.data);
         
         alert(response.data.message);
@@ -101,7 +101,7 @@ function Main() {
     const token = localStorage.getItem("token");
     if (token) {
       axios
-        .get("http://localhost:5000/user", {
+        .get("https://localhost:5000/user", {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
