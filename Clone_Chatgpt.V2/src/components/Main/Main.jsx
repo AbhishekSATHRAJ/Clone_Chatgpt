@@ -61,6 +61,7 @@ function Main() {
       headers: {
         "Content-Type": "application/json", 
       },
+        withCredentials: true,
     };
       if (formView === "register") {
         console.log("Sending register request",data);
